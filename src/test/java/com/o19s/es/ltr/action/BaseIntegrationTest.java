@@ -154,7 +154,7 @@ public abstract class BaseIntegrationTest extends ESSingleNodeTestCase {
                     if (FEATURE_EXTRACTOR.equals(scriptSource)) {
                         SearchScript.Factory factory = (p, lookup) ->
                                 new SearchScript.LeafFactory() {
-                                    final Map<String, Float> featureSupplier;
+                                    final Map<String, Double> featureSupplier;
                                     final String dependentFeature;
                                     public static final String DEPDENDENT_FEATURE = "dependent_feature";
 
@@ -165,7 +165,7 @@ public abstract class BaseIntegrationTest extends ESSingleNodeTestCase {
                                         if (!p.containsKey(DEPDENDENT_FEATURE)) {
                                             throw new IllegalArgumentException("Missing parameter [depdendent_feature ]");
                                         }
-                                        featureSupplier = (Map<String, Float>) p.get(FEATURE_VECTOR);
+                                        featureSupplier = (Map<String, Double>) p.get(FEATURE_VECTOR);
                                         dependentFeature = p.get(DEPDENDENT_FEATURE).toString();
                                     }
 

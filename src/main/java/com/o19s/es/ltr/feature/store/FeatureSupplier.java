@@ -10,7 +10,7 @@ import java.util.Set;
 import java.util.function.Supplier;
 
 
-public class FeatureSupplier extends AbstractMap<String, Float> implements Supplier<LtrRanker.FeatureVector> {
+public class FeatureSupplier extends AbstractMap<String, Double> implements Supplier<LtrRanker.FeatureVector> {
     private Supplier<LtrRanker.FeatureVector> vectorSupplier;
     private final FeatureSet featureSet;
 
@@ -51,14 +51,15 @@ public class FeatureSupplier extends AbstractMap<String, Float> implements Suppl
      * {@code null} if this map contains no mapping for the key
      */
     @Override
-    public Float get(Object featureName) {
+    public Double get(Object featureName) {
         int featureOrdinal;
         try {
             featureOrdinal = featureSet.featureOrdinal((String) featureName);
         } catch (IllegalArgumentException e) {
             return null;
         }
-        return vectorSupplier.get().getFeatureScore(featureOrdinal);
+        double featureScore = vectorSupplier.get().getFeatureScore(featureOrdinal);
+        return featureScore;
     }
 
     /**
@@ -69,11 +70,11 @@ public class FeatureSupplier extends AbstractMap<String, Float> implements Suppl
      */
 
     @Override
-    public Set<Entry<String, Float>> entrySet() {
-        return new AbstractSet<Entry<String, Float>>() {
+    public Set<Entry<String, Double>> entrySet() {
+        return new AbstractSet<Entry<String, Double>>() {
             @Override
-            public Iterator<Entry<String, Float>> iterator() {
-                return new Iterator<Entry<String, Float>>() {
+            public Iterator<Entry<String, Double>> iterator() {
+                return new Iterator<Entry<String, Double>>() {
                     private int index;
 
                     @Override
@@ -86,10 +87,10 @@ public class FeatureSupplier extends AbstractMap<String, Float> implements Suppl
                     }
 
                     @Override
-                    public Entry<String, Float> next() {
+                    public Entry<String, Double> next() {
                         LtrRanker.FeatureVector featureVector = getFeatureVector();
                         if (featureVector != null) {
-                            float score = featureVector.getFeatureScore(index);
+                            double score = featureVector.getFeatureScore(index);
                             String featureName = featureSet.feature(index).name();
                             index++;
                             return new SimpleImmutableEntry<>(featureName, score);

@@ -57,9 +57,9 @@ public class FeatureSupplierTests extends LuceneTestCase {
 
     public void testEntrySetWhenFeatureVectorNotSet(){
         FeatureSupplier featureSupplier = new FeatureSupplier(getFeatureSet());
-        Set<Map.Entry<String, Float>> entrySet = featureSupplier.entrySet();
+        Set<Map.Entry<String, Double>> entrySet = featureSupplier.entrySet();
         assertTrue(entrySet.isEmpty());
-        Iterator<Map.Entry<String, Float>> iterator = entrySet.iterator();
+        Iterator<Map.Entry<String, Double>> iterator = entrySet.iterator();
         assertFalse(iterator.hasNext());
         assertNull(iterator.next());
         assertEquals(0, entrySet.size());
@@ -73,11 +73,11 @@ public class FeatureSupplierTests extends LuceneTestCase {
         vectorSupplier.set(featureVector);
         featureSupplier.set(vectorSupplier);
 
-        Set<Map.Entry<String, Float>> entrySet = featureSupplier.entrySet();
+        Set<Map.Entry<String, Double>> entrySet = featureSupplier.entrySet();
         assertFalse(entrySet.isEmpty());
-        Iterator<Map.Entry<String, Float>> iterator = entrySet.iterator();
+        Iterator<Map.Entry<String, Double>> iterator = entrySet.iterator();
         assertTrue(iterator.hasNext());
-        Map.Entry<String, Float> item = iterator.next();
+        Map.Entry<String, Double> item = iterator.next();
         assertEquals("test",item.getKey());
         assertEquals(10.0f,item.getValue(), 0.0f);
         assertEquals(1, entrySet.size());
