@@ -30,8 +30,6 @@ import org.apache.lucene.index.LeafReaderContext;
 import org.apache.lucene.index.Term;
 import org.apache.lucene.search.ConstantScoreScorer;
 import org.apache.lucene.search.ConstantScoreWeight;
-import org.apache.lucene.search.DisiPriorityQueue;
-import org.apache.lucene.search.DisiWrapper;
 import org.apache.lucene.search.DocIdSetIterator;
 import org.apache.lucene.search.Explanation;
 import org.apache.lucene.search.IndexSearcher;
@@ -244,7 +242,7 @@ public class RankerQuery extends Query {
         @Override
         public RankerScorer scorer(LeafReaderContext context) throws IOException {
             List<Scorer> scorers = new ArrayList<>(weights.size());
-            DisiPriorityQueue disiPriorityQueue = new DisiPriorityQueue(weights.size());
+            List<DocIdSetIterator> subIterators = new ArrayList<>(weights.size());
             MutableSupplier<LtrRanker.FeatureVector> vectorSupplier = new MutableSupplier<>();
             for (Weight weight : weights) {
                 Scorer scorer;
@@ -257,11 +255,11 @@ public class RankerQuery extends Query {
                     scorer = new NoopScorer(this, DocIdSetIterator.empty());
                 }
                 scorers.add(scorer);
-                disiPriorityQueue.add(new DisiWrapper(scorer));
+                subIterators.add(scorer.iterator());
             }
 
             DisjunctionDISI rankerIterator = new DisjunctionDISI(
-                    DocIdSetIterator.all(context.reader().maxDoc()), disiPriorityQueue);
+                    DocIdSetIterator.all(context.reader().maxDoc()), subIterators);
             return new RankerScorer(scorers, rankerIterator, vectorSupplier);
         }
 
@@ -327,11 +325,11 @@ public class RankerQuery extends Query {
      */
     static class DisjunctionDISI extends DocIdSetIterator {
         private final DocIdSetIterator main;
-        private final DisiPriorityQueue subIteratorsPriorityQueue;
+        private final List<DocIdSetIterator> subIterators;
 
-        DisjunctionDISI(DocIdSetIterator main, DisiPriorityQueue subIteratorsPriorityQueue) {
+        DisjunctionDISI(DocIdSetIterator main, List<DocIdSetIterator> subIterators) {
             this.main = main;
-            this.subIteratorsPriorityQueue = subIteratorsPriorityQueue;
+            this.subIterators = subIterators;
         }
 
         @Override
@@ -357,10 +355,11 @@ public class RankerQuery extends Query {
             if (target == NO_MORE_DOCS) {
                 return;
             }
-            DisiWrapper top = subIteratorsPriorityQueue.top();
-            while (top.doc < target) {
-                top.doc = top.iterator.advance(target);
-                top = subIteratorsPriorityQueue.updateTop();
+            for (DocIdSetIterator iterator : subIterators) {
+                // FIXME: Probably inefficient
+                if (iterator.docID() < target) {
+                    iterator.advance(target);
+                }
             }
         }
 
